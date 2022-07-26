@@ -1,10 +1,11 @@
-import './App.css';
+import Board from './components/Board/Board';
+import './App.scss';
 
 function App() {
   return (
-    <>
-      Hello World!
-    </>
+    <div className="app">
+      <Board />
+    </div>
   );
 }
 
