@@ -1,5 +1,6 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import boardSlice from "./boardSlice";
+import boardSlice from './boardSlice';
+import thunk from 'redux-thunk';
 
 const rootReducer = combineReducers({
     board: boardSlice,
@@ -7,4 +8,5 @@ const rootReducer = combineReducers({
 
 export const store = configureStore({
     reducer: rootReducer,
+    middleware: [thunk],
 });

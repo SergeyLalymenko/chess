@@ -1,11 +1,13 @@
 import './Cell.scss';
 
-const Cell = ({ x, y, color, boardLength, boardWidth}) => {
-    console.log(boardWidth);
-
+const Cell = ({ color, figure, boardLength}) => {
     return (
-        <div className={`cell ${color}`} style={{width: `${100 / boardLength}%`, height: `${boardWidth / boardLength}px`}}>
-            
+        <div className={`cell ${color}`} style={{width: `${100 / boardLength}%`, padding: `${100 / boardLength / 2}% 0`}}>
+            {
+                figure && (
+                    <img src={figure.icon} alt="figure" />
+                )
+            }
         </div>
     );
 };

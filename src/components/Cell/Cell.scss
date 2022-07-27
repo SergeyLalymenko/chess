@@ -1,7 +1,20 @@
+.cell {
+    position: relative;
+
+    img {
+        width: 50%;
+        height: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+
 .cell.black {
-    background: black;
+    background: #666;
 }
 
 .cell.white {
-    background: white;
+    background: #CCC;
 }

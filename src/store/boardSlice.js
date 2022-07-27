@@ -4,14 +4,14 @@ const boardSlice = createSlice({
     name: 'board',
     initialState: {
         length: 5,
-        coordinates: '',
+        data: null,
     },
     reducers: {
-        setBoardCoordinates(state, action) {
-            state.coordinates = action.payload;
+        setBoardData(state, action) {
+            state.data = action.payload;
         },
     }
 });
 
 export default boardSlice.reducer;
-export const { setBoardCoordinates } = boardSlice.actions;
+export const { setBoardData } = boardSlice.actions;
