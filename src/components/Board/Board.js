@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-import { setBoardData } from '../../store/boardSlice';
+import { setBoardData, setSelectedCell } from '../../store/boardSlice';
 import Cell from '../Cell/Cell';
 import King from '../Figures/King';
 import Queen from '../Figures/Queen';
@@ -10,9 +10,13 @@ import './Board.scss';
 
 const Board = () => {
     const dispatch = useDispatch();
-    const { length: boardLength, data: boardData } = useSelector((state) => state.board);
+    const { length: boardLength, data: boardData, selectedCell } = useSelector((state) => state.board);
 
-    useEffect(initializeBoard, []);
+    useEffect(() => {
+        initializeBoard();
+    }, []);
+
+    useEffect(updateSelectedCell, [selectedCell]);
 
     function initializeBoard () {
         const boardData = [];
@@ -26,6 +30,7 @@ const Board = () => {
                 rowData.push({
                     color: color,
                     figure: null,
+                    selected: false,
                     id: Math.random(),
                 });
             };
@@ -45,20 +50,75 @@ const Board = () => {
         boardData[boardLength - 1][1].figure = new Bishop('white');
         boardData[boardLength - 1][2].figure = new King('white');
         boardData[boardLength - 1][3].figure = new Queen('white');
+        boardData[selectedCell.x][selectedCell.y].selected = true;
 
         dispatch(setBoardData(boardData));
+    }
+
+    function updateSelectedCell() {
+        if(boardData) {
+            const newBoardData = boardData.map((row) => {
+                return row.map((item) => ({
+                    ...item,
+                    selected: false,
+                }));
+            });
+
+            newBoardData[selectedCell.y][selectedCell.x].selected = true;
+            console.log(boardData);
+            dispatch(setBoardData(newBoardData));
+        }
+    }
+
+    function onKeypress(e) {
+        switch(e.key) {
+            case 'ArrowUp': onArrowMove(selectedCell.x, selectedCell.y - 1); break;
+            case 'ArrowDown': onArrowMove(selectedCell.x, selectedCell.y + 1); break;
+            case 'ArrowLeft': onArrowMove(selectedCell.x - 1, selectedCell.y); break;
+            case 'ArrowRight': onArrowMove(selectedCell.x + 1, selectedCell.y); break;
+            default: return false;
+        }
+    }
+
+    function onArrowMove(x, y) {
+        dispatch(setSelectedCell(getNewSelectedCellPosition(x, y)));
+    }
+
+    function getNewSelectedCellPosition(x, y) {
+        const newPositions = {
+            x: x,
+            y: y,
+        };
+
+        if(x < 0) {
+            newPositions.x = boardLength - 1;
+        }
+
+        if(x >= boardLength) {
+            newPositions.x = 0;
+        }
+
+        if(y < 0) {
+            newPositions.y = boardLength - 1;
+        }
+
+        if(y >= boardLength) {
+            newPositions.y = 0;
+        }
+
+        return newPositions;
     }
 
     function renderBoard() {
         return (
             boardData.map((item) => {
-                return item.map((item) => <Cell key={item.id} color={item.color} figure={item.figure} boardLength={boardLength} />);
+                return item.map((item) => <Cell key={item.id} color={item.color} figure={item.figure} selected={item.selected} boardLength={boardLength} />);
             })
         );
     }
 
     return (
-        <div className="board">
+        <div className="board" onKeyDown={onKeypress} tabIndex="0">
             {boardData && renderBoard()}
         </div>
     );

@@ -6,5 +6,6 @@ export default class King extends Component {
     constructor(color) {
         super();
         this.icon = color === 'white' ? whiteIcon : blackIcon;
+        this.name = 'king';
     }
 };

@@ -6,5 +6,6 @@ export default class Rook extends Component {
     constructor(color) {
         super();
         this.icon = color === 'white' ? whiteIcon : blackIcon;
+        this.name = 'rook';
     }
 };

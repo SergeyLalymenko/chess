@@ -5,13 +5,17 @@ const boardSlice = createSlice({
     initialState: {
         length: 5,
         data: null,
+        selectedCell: {y: 0, x: 0},
     },
     reducers: {
         setBoardData(state, action) {
             state.data = action.payload;
         },
+        setSelectedCell(state, action) {
+            state.selectedCell = action.payload;
+        },
     }
 });
 
 export default boardSlice.reducer;
-export const { setBoardData } = boardSlice.actions;
+export const { setBoardData, setSelectedCell } = boardSlice.actions;

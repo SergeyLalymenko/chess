@@ -6,5 +6,6 @@ export default class Bishop extends Component {
     constructor(color) {
         super();
         this.icon = color === 'white' ? whiteIcon : blackIcon;
+        this.name = 'bishop';
     }
 };
