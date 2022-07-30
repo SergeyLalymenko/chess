@@ -5,3 +5,22 @@
     width: 100%;
     max-width: 500px;
 }
+
+.steps-list {
+    width: 100px;
+    margin-left: 50px;
+
+    li {
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 400;
+    }
+
+    li.white::marker {
+        color: #CCC;
+    }
+
+    li.black::marker {
+        color: #666;
+    }
+}

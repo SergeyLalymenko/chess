@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { setBoardData, setSelectedCell } from '../../store/boardSlice';
+import { useEffect, useState } from 'react';
+import { setBoardData } from '../../store/boardSlice';
 import Cell from '../Cell/Cell';
 import King from '../Figures/King';
 import Queen from '../Figures/Queen';
@@ -10,13 +10,13 @@ import './Board.scss';
 
 const Board = () => {
     const dispatch = useDispatch();
-    const { length: boardLength, data: boardData, selectedCell } = useSelector((state) => state.board);
+    const { length: boardLength, data: boardData } = useSelector((state) => state.board);
+    const [selectedCell, setSelectedCell] = useState({x: 0, y: boardLength - 1});
+    const [submittedCell, setSubmittedCell] = useState(null);
+    const [stepColor, setStepColor] = useState('white');
+    const [stepsList, setStepsList] = useState([]);
 
-    useEffect(() => {
-        initializeBoard();
-    }, []);
-
-    useEffect(updateSelectedCell, [selectedCell]);
+    useEffect(initializeBoard, []);
 
     function initializeBoard () {
         const boardData = [];
@@ -28,9 +28,10 @@ const Board = () => {
                 const color = (i + j) % 2 ? 'white' : 'black';
 
                 rowData.push({
+                    x: j,
+                    y: i,
                     color: color,
                     figure: null,
-                    selected: false,
                     id: Math.random(),
                 });
             };
@@ -55,33 +56,95 @@ const Board = () => {
         dispatch(setBoardData(boardData));
     }
 
-    function updateSelectedCell() {
-        if(boardData) {
-            const newBoardData = boardData.map((row) => {
-                return row.map((item) => ({
-                    ...item,
-                    selected: false,
-                }));
-            });
-
-            newBoardData[selectedCell.y][selectedCell.x].selected = true;
-            console.log(boardData);
-            dispatch(setBoardData(newBoardData));
-        }
-    }
-
-    function onKeypress(e) {
+    function onKeyDown(e) {
         switch(e.key) {
+            case 'Enter': onEnterDown(); break;
             case 'ArrowUp': onArrowMove(selectedCell.x, selectedCell.y - 1); break;
             case 'ArrowDown': onArrowMove(selectedCell.x, selectedCell.y + 1); break;
             case 'ArrowLeft': onArrowMove(selectedCell.x - 1, selectedCell.y); break;
             case 'ArrowRight': onArrowMove(selectedCell.x + 1, selectedCell.y); break;
             default: return false;
+        };
+    }
+
+    function onEnterDown() {
+        if(getCell(selectedCell.x, selectedCell.y).figure?.color === stepColor) {
+            setSubmittedCell(selectedCell);
+        } else if(submittedCell && getCell(submittedCell.x, submittedCell.y).figure.canMove(submittedCell, selectedCell, getCell) && getCell(selectedCell.x, selectedCell.y).figure?.color !== stepColor) {
+            updateStepsList(selectedCell, submittedCell);
+            moveFigure(selectedCell.x, selectedCell.y, getCell(submittedCell.x, submittedCell.y).figure);
         }
     }
 
+    function getCell(x, y) {
+        return boardData[y][x];
+    }
+
+    function moveFigure(x, y, figure) {
+        const newBoardData = boardData.map((row) => {
+            return row.map((cell) => {
+                if(cell.x === x && cell.y === y) {
+                    return {
+                        ...cell,
+                        figure,
+                    };
+                }
+
+                if (cell.x === submittedCell.x && cell.y === submittedCell.y) {
+                    return {
+                        ...cell,
+                        figure: null,
+                    };
+                }
+
+                return cell;
+            });
+        });
+
+        toggleStep();
+        setSubmittedCell(null);
+        dispatch(setBoardData(newBoardData));
+    }
+
+    function updateStepsList(selectedCell, submittedCell) {
+        const notationX = {
+            0: 'A',
+            1: 'B',
+            2: 'C',
+            3: 'D',
+            4: 'E',
+            5: 'F',
+            6: 'G',
+            7: 'H',
+        };
+        const notationY = {
+            0: boardLength,
+            1: boardLength - 1,
+            2: boardLength - 2,
+            3: boardLength - 3,
+            4: boardLength - 4,
+            5: boardLength - 5,
+            6: boardLength - 6,
+            7: boardLength - 7,
+        };
+
+        const stepsItem = {
+            text: `${notationX[submittedCell.x]}${notationY[submittedCell.y]} - ${notationX[selectedCell.x]}${notationY[selectedCell.y]}`,
+            color: stepColor,
+            id: Math.random(),
+        };
+
+        setStepsList([...stepsList, stepsItem]);
+    }
+
+    function toggleStep() {
+        const nextStep = stepColor === 'white' ? 'black' : 'white';
+
+        setStepColor(nextStep);
+    }
+
     function onArrowMove(x, y) {
-        dispatch(setSelectedCell(getNewSelectedCellPosition(x, y)));
+        setSelectedCell(getNewSelectedCellPosition(x, y));
     }
 
     function getNewSelectedCellPosition(x, y) {
@@ -109,18 +172,36 @@ const Board = () => {
         return newPositions;
     }
 
+    function renderStepsList() {
+        return (
+            stepsList.map((step) => {
+            return (
+                <li className={step.color} key={step.id}>
+                    {step.text}
+                </li>
+                );
+            })
+        );
+    }
+
     function renderBoard() {
         return (
             boardData.map((item) => {
-                return item.map((item) => <Cell key={item.id} color={item.color} figure={item.figure} selected={item.selected} boardLength={boardLength} />);
+                return item.map((item) => <Cell key={item.id} x={item.x} y={item.y} color={item.color} figure={item.figure} selectedCell={selectedCell} submittedCell={submittedCell} selected={item.selected} submitted={item.submitted} boardLength={boardLength} />);
             })
         );
     }
 
     return (
-        <div className="board" onKeyDown={onKeypress} tabIndex="0">
-            {boardData && renderBoard()}
-        </div>
+        <>
+            <div className="board" onKeyDown={onKeyDown} tabIndex="0">
+                {boardData && renderBoard()}
+            </div>
+
+            <ul className='steps-list'>
+                {stepsList && renderStepsList()}
+            </ul>
+        </>
     );
 };
 
