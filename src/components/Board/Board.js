@@ -2,10 +2,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { setBoardData } from '../../store/boardSlice';
 import Cell from '../Cell/Cell';
-import King from '../Figures/King';
-import Queen from '../Figures/Queen';
-import Bishop from '../Figures/Bishop';
-import Rook from '../Figures/Rook';
+import King from '../../models/Figures/King';
+import Queen from '../../models/Figures/Queen';
+import Bishop from '../../models/Figures/Bishop';
+import Rook from '../../models/Figures/Rook';
 import './Board.scss';
 
 const Board = () => {
@@ -45,12 +45,12 @@ const Board = () => {
     function addFigures(boardData) {
         boardData[0][0].figure = new Rook('black');
         boardData[0][1].figure = new Bishop('black');
-        boardData[0][2].figure = new King('black');
-        boardData[0][3].figure = new Queen('black');
+        boardData[0][2].figure = new Queen('black');
+        boardData[0][3].figure = new King('black');
         boardData[boardLength - 1][0].figure = new Rook('white');
         boardData[boardLength - 1][1].figure = new Bishop('white');
-        boardData[boardLength - 1][2].figure = new King('white');
-        boardData[boardLength - 1][3].figure = new Queen('white');
+        boardData[boardLength - 1][2].figure = new Queen('white');
+        boardData[boardLength - 1][3].figure = new King('white');
         boardData[selectedCell.x][selectedCell.y].selected = true;
 
         dispatch(setBoardData(boardData));
@@ -68,11 +68,17 @@ const Board = () => {
     }
 
     function onEnterDown() {
-        if(getCell(selectedCell.x, selectedCell.y).figure?.color === stepColor) {
+        const selectedCellData = getCell(selectedCell.x, selectedCell.y);
+        const submittedCellData = submittedCell ? getCell(submittedCell.x, submittedCell.y) : null;
+        const isTargetAlly = selectedCellData.figure?.color === stepColor;
+
+        if(isTargetAlly) {
             setSubmittedCell(selectedCell);
-        } else if(submittedCell && getCell(submittedCell.x, submittedCell.y).figure.canMove(submittedCell, selectedCell, getCell) && getCell(selectedCell.x, selectedCell.y).figure?.color !== stepColor) {
+        } else if(submittedCell && submittedCellData.figure.name === 'king' && submittedCellData.figure.isCastling(submittedCell, selectedCell, getCell)) {
+            castling(submittedCell, selectedCell, submittedCellData.figure);
+        } else if(submittedCell && submittedCellData.figure.canMove(submittedCell, selectedCell, getCell)) {
             updateStepsList(selectedCell, submittedCell);
-            moveFigure(selectedCell.x, selectedCell.y, getCell(submittedCell.x, submittedCell.y).figure);
+            moveFigure(selectedCell, submittedCellData.figure);
         }
     }
 
@@ -80,7 +86,7 @@ const Board = () => {
         return boardData[y][x];
     }
 
-    function moveFigure(x, y, figure) {
+    function moveFigure({x, y}, figure) {
         const newBoardData = boardData.map((row) => {
             return row.map((cell) => {
                 if(cell.x === x && cell.y === y) {
@@ -88,12 +94,48 @@ const Board = () => {
                         ...cell,
                         figure,
                     };
-                }
+                };
 
                 if (cell.x === submittedCell.x && cell.y === submittedCell.y) {
                     return {
                         ...cell,
                         figure: null,
+                    };
+                };
+
+                return cell;
+            });
+        });
+
+        toggleStep();
+        setSubmittedCell(null);
+        dispatch(setBoardData(newBoardData));
+    }
+
+    function castling(currentCell, targetCell, figure) {
+        const dicrection = currentCell.x < targetCell.x ? 1 : -1;
+        const nextCellFigure = getCell(targetCell.x + dicrection, currentCell.y).figure;
+
+        const newBoardData = boardData.map((row) => {
+            return row.map((cell) => {
+                if(cell.x === targetCell.x && cell.y === targetCell.y) {
+                    return {
+                        ...cell,
+                        figure,
+                    };
+                };
+
+                if ((cell.x === currentCell.x && cell.y === currentCell.y) || (cell.x === targetCell.x + dicrection && cell.y === targetCell.y)) {
+                    return {
+                        ...cell,
+                        figure: null,
+                    };
+                };
+
+                if(cell.x === targetCell.x - dicrection && cell.y === targetCell.y) {
+                    return {
+                        ...cell,
+                        figure: nextCellFigure,
                     };
                 }
 

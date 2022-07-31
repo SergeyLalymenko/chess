@@ -8,9 +8,16 @@ export default class Rook extends Figure {
         this.icon = color === 'white' ? whiteIcon : blackIcon;
         this.name = 'rook';
         this.color = color;
+        this.firstStep = true;
     };
 
     canMove(currentCell, targetCell, getCell) {
-        return (this.isEmptyHorizontal(currentCell, targetCell, getCell) || this.isEmptyVertical(currentCell, targetCell, getCell));
+        const canMove = (this.isEmptyHorizontal(currentCell, targetCell, getCell) || this.isEmptyVertical(currentCell, targetCell, getCell));
+
+        if(canMove) {
+            this.firstStep = false;
+        };
+
+        return canMove;
     };
 };
